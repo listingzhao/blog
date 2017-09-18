@@ -8,7 +8,7 @@ menu:
 subnav:
   github: "https://github.com/listingzhao"
   weibo: "https://weibo.com/u/3262739124"
-  rss: "#"
+  #rss: "#"
   zhihu: "https://www.zhihu.com/people/listingzhao"
   #qq: "#"
   #weixin: "#"
@@ -23,7 +23,7 @@ subnav:
   #twitter: "#"
   #linkedin: "#"
 
-rss: /atom.xml
+#rss: /atom.xml
 
 # 是否需要修改 root 路径
 # 如果您的网站存放在子目录中，例如 http://yoursite.com/blog，
