@@ -121,6 +121,7 @@ console.log(myInstance.constructor)
 使用apply和内置函数
 
 ``` javascript
+
 function minOfArray (arr) {
   var min = Infinity
   var QUANTUM = 32768
