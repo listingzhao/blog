@@ -34,4 +34,5 @@ $ git log --pretty=oneline # 显示从最近到最远的提交日志 --pretty=on
 $ git reflog # 查看命令历史
 $ git reset --hard commit_id # 回退到某一版本
 $ git checkout — file # 撤销修改
+$ git branch -r # 查看当前分支
 ```
