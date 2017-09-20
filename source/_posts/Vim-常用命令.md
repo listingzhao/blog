@@ -3,6 +3,16 @@ title: Vim 常用命令
 date: 2017-09-18 10:47:52
 tags:
 ---
+
+
+### 安装vim
+``` bash
+$ apt-get update
+$ apt-get install vim  # ubuntu
+$ yum upgrade
+$ yum install vim      # centos
+```
+
 ### 显示行号
 ``` bash
 $ :set nu
