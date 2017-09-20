@@ -88,3 +88,50 @@ apply() 方法调用一个函数, 其具有一个指定的this值，以及作为
 
 `argsArray`
 一个数组或者类数组对象，其中的数组元素将作为单独的参数传给 `fun` 函数。如果该参数的值为null 或 undefined，则表示不需要传入任何参数。
+
+### 描述
+在调用一个存在的函数时，你可以为其指定一个 this 对象。 this 指当前对象，也就是正在调用这个函数的对象。 使用 apply， 你可以只写一次这个方法然后在另一个对象中继承它，而不用在新对象中重复写该方法。
+
+apply 与 call() 非常相似，不同之处在于提供参数的方式。apply 使用参数数组而不是一组参数列表。apply 可以使用数组字面量，如 `fun.apply(this, ['eat', 'bananas'])`，或数组对象， 如  `fun.apply(this, new Array('eat', 'bananas'))`。
+
+### 示例
+使用apply来链接构造器
+
+``` javascript
+Function.prototype.construct = function (aArgs) {
+  var oNew = Object.create(this.prototype)
+  this.apply(oNew, aArgs)
+  return oNew
+}
+
+function MyConstructor () {
+  for (var nProp = 0; nProp < arguments.length; nProp++) {
+    this['property' + nProp] = arguments[nProp]
+  }
+}
+
+var myArray = [4, 'Hello world!', false]
+var myInstance = MyConstructor.construct(myArray)
+
+console.log(myInstance.property1)                // logs "Hello world!"
+console.log(myInstance instanceof MyConstructor) // logs "true"
+console.log(myInstance.constructor)
+```
+
+使用apply和内置函数
+
+``` javascript
+function minOfArray (arr) {
+  var min = Infinity
+  var QUANTUM = 32768
+
+  for (var i = 0, len = arr.length; i < len; i += QUANTUM) {
+    var submin = Math.min.apply(null, arr.slice(i, Math.min(i + QUANTUM, len)))
+    min = Math.min(submin, min)
+  }
+
+  return min
+}
+
+var min = minOfArray([5, 6, 2, 3, 7])
+```
