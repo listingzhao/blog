@@ -81,3 +81,9 @@ MyClass.prototype.myMethod = function() {
      // do a thing
 };
 ```
+
+使用 Object.create 的 propertyObject 参数
+
+``` javascript
+
+```
