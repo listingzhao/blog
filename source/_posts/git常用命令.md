@@ -35,4 +35,9 @@ $ git reflog # 查看命令历史
 $ git reset --hard commit_id # 回退到某一版本
 $ git checkout — file # 撤销修改
 $ git branch -r # 查看当前分支
+$ git branch <name> # 创建分支
+$ git checkout <name> # 切换分支
+$ git checkout -b <name> # 创建+切换分支
+$ git merge <name> # 合并某分支到当前分支
+$ git branch -d <name> # 删除分支
 ```
