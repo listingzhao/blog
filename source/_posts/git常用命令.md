@@ -40,4 +40,10 @@ $ git checkout <name> # 切换分支
 $ git checkout -b <name> # 创建+切换分支
 $ git merge <name> # 合并某分支到当前分支
 $ git branch -d <name> # 删除分支
+$ git checkout -- <file> # 取消对文件的修改。还原到最近的版本，废弃本地修改
+$ git reset 057d # 回退到某个版本
+$ git reset HEAD <file> # 取消已经暂存的文件
+$ git reset HEAD^ # 回退所有内容到上一个版本
+$ git reset HEAD^ <file> # 回退文件到上一个版本
+$ git reset –hard origin/master # 将本地的状态回退到和远程的一样
 ```
