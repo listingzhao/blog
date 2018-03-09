@@ -12,3 +12,12 @@ $ apt-get install lrzsz     # ubuntu
 $ yum upgrade
 $ yum install -y lrzsz      # centos
 ```
+
+### 权限
+
+``` bash
+$ chmod +x *.sh
+$ ./xx.sh
+$ # or
+$ sh xx.sh
+```
