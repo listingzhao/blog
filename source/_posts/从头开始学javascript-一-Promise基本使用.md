@@ -5,8 +5,23 @@ tags:
 ---
 ### 为什么使用Promise
 
-#### 回调地狱
+#### 背景-回调地狱
+在工作当中我们往往会遇到多个请求依赖的问题，可能就会有如下的写法
 
+```javascript
+$.post("/data1", { data: "data1"}, function(data1) {
+  if(data.state === 'error') return
+  $.post("/data2", { data: data1}, function(data2) {
+    if(data2.state === 'error') return
+    $.post("/data3", { data: data2}, function(data3) {
+      console.log(data3)
+    })
+  })
+})
+```
+
+这里只展示了三个请求间的互相依赖，如果业务复杂一些，需要有5，6个请求的话，代码看起来就有点恐怖了。。
+Promise的出现正是为了解决这样的问题。
 
 ### 含义
 Promise，就是一个对象，用来传递异步操作的消息，它代表了某个未来才会知道结果的事件（通常是一个异步操作）,并且这个事件提供统一的API，可供进一步处理。
