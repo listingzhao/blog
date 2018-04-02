@@ -11,7 +11,7 @@ const v = new Vue({
     b:2
   }
 })
-v.$watch('a',() => console.log('haha watch 成功了1!'))
+v.$watch('a',() => console.log('haha watch 成功了!'))
 
 setTimeout(() => {
   v.a = 6
@@ -67,9 +67,9 @@ const targetStack = []
 export class Watcher {
   constructor (vm, expOrFn, cb) {
     this.vm = vm
-    this.value = this.get()
     this.cb = cb
     this.expOrFn = expOrFn
+    this.value = this.get()
   }
 
   update() {
@@ -105,7 +105,6 @@ export function defineReactive(obj, key, val) {
   if(arguments.length === 2) {
     val = obj[key]
   }
-  console.log(val + 'defineReactive val')
   let childOb = observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -122,7 +121,6 @@ export function defineReactive(obj, key, val) {
     },
     set: function reactiveSetter(newVal) {
       val = newVal
-      console.log('newVal:>>>' + newVal)
       childOb = observe(val)
       dep.notify() //通知
     }
@@ -172,7 +170,6 @@ const v2 = new Vueb({
 v2.$watch('a',() => console.log('haha1 Vueb watch 成功了哈!'))
 
 setTimeout(() => {
-  console.log('setTimeout v2')
   v2.a = 6
 }, 3000)
 ```
