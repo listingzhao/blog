@@ -11,7 +11,7 @@ const v = new Vue({
     b:2
   }
 })
-v.$watch('a',() => console.log('haha watch 成功了!'))
+v.$watch('a',() => console.log('watch 成功了!'))
 
 setTimeout(() => {
   v.a = 6
@@ -135,11 +135,31 @@ export function observe(value) {
   return ob
 }
 
+export function proxy(target, sourceKey, key) {
+  Object.defineProperty(target, key, {
+      configurable: true,
+      enumerable: true,
+      get: function proxyGetter () {
+        return this[sourceKey][key]
+      },
+      set: function proxySetter (val) {
+        this[sourceKey][key] = val
+      }
+    })
+}
+
 export class Vueb {
   constructor(options ={}){
     this.$options = options
-    let data = this._data=this.$options.data
-    Object.keys(data).forEach(key=>this._proxy(key))
+    let data = this._data = this.$options.data
+    // proxy data on instance
+    const keys = Object.keys(data)
+    let i = keys.length
+    while(i--) {
+      let key = keys[i]
+      proxy(this, `_data`, key)
+    }
+    // observe data
     observe(data)
   }
 
@@ -147,18 +167,6 @@ export class Vueb {
     new Watcher(this, expOrFn, cb)
   }
 
-  _proxy(key) {
-    Object.defineProperty(this, key, {
-      configurable: true,
-      enumerable: true,
-      get: function proxyGetter () {
-        return this._data[key]
-      },
-      set: function proxySetter (val) {
-        this._data[key] = val
-      }
-    })
-  }
 }
 
 const v2 = new Vueb({
@@ -167,9 +175,9 @@ const v2 = new Vueb({
     b:2
   }
 })
-v2.$watch('a',() => console.log('haha1 Vueb watch 成功了哈!'))
+v2.$watch('a',() => console.log('haha Vueb watch 成功了哈!'))
 
 setTimeout(() => {
   v2.a = 6
-}, 3000)
+}, 2000)
 ```
