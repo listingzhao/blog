@@ -157,7 +157,7 @@ function SuperType(name) {
 }
 
 function SubType(age, name) {
-  SuperType.call(this, name) 
+  SuperType.call(this, name)
   this.age = age
 }
 

@@ -46,4 +46,5 @@ $ git reset HEAD <file> # 取消已经暂存的文件
 $ git reset HEAD^ # 回退所有内容到上一个版本
 $ git reset HEAD^ <file> # 回退文件到上一个版本
 $ git reset –hard origin/master # 将本地的状态回退到和远程的一样
+$ git cherry -v  # 查看本地提交但未push记录
 ```
