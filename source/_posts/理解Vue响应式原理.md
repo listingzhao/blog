@@ -17,6 +17,7 @@ setTimeout(() => {
   v.a = 6
 }, 2000)
 
+// 发布订阅 依赖收集追踪
 export class Dep {
   constructor() {
     this.subs = []
@@ -44,24 +45,6 @@ export class Dep {
 
 Dep.target = null
 
-export class Observer {
-  constructor(value) {
-    this.value = value
-    this.dep = new Dep()
-    this.walk(value)
-  }
-
-  /**
-   *遍历每个属性并将其转换为getter / setter。此方法只应值类型是对象时调用。
-   */
-  walk(obj){
-    const keys = Object.keys(obj)
-    for(let i = 0; i < keys.length; i++){
-      defineReactive(obj, keys[i])
-    }
-  }
-}
-
 const targetStack = []
 
 export class Watcher {
@@ -87,16 +70,42 @@ export class Watcher {
   }
 
   get() {
-    // 标记target
-    if(Dep.target) targetStack.push(Dep.target)
-    Dep.target = this
-    const value = this.vm._data[this.expOrFn]
-    Dep.target = targetStack.pop()
+    pushTarget(this)
+    let value = this.vm._data[this.expOrFn]
+    popTarget()
     return value
   }
 
   addDep (dep) {
     dep.addSub(this)
+  }
+}
+
+export function pushTarget (target) {
+  targetStack.push(target)
+  Dep.target = target
+}
+
+export function popTarget () {
+  targetStack.pop()
+  Dep.target = targetStack[targetStack.length - 1]
+}
+
+export class Observer {
+  constructor(value) {
+    this.value = value
+    this.dep = new Dep()
+    this.walk(value)
+  }
+
+  /**
+   *遍历每个属性并将其转换为getter / setter。此方法只应值类型是对象时调用。
+   */
+  walk(obj){
+    const keys = Object.keys(obj)
+    for(let i = 0; i < keys.length; i++){
+      defineReactive(obj, keys[i])
+    }
   }
 }
 
@@ -175,7 +184,12 @@ const v2 = new Vueb({
     b:2
   }
 })
-v2.$watch('a',() => console.log('haha Vueb watch 成功了哈!'))
+
+v2.$watch('a', (value, oldValue) => {
+  console.log('haha Vueb watch 成功了!')
+  console.log('value:', value)
+  console.log('oldValue:', oldValue)
+})
 
 setTimeout(() => {
   v2.a = 6
