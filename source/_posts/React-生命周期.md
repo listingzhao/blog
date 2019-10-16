@@ -62,7 +62,7 @@ componentWillMount 这个生命周期之前一般能做的事情是在这里做�
 
 componentWillreceiveProps 的功能可以使用getDerivedStateFromProps 配合 componentDidUpdate 来完成；使用的场景1：组件有newprops的时候更新state，getDerivedStateFromProps 是一个static方法，所以不能内部使用this; 场景2：当props改变的时候执行一些回调
 
-#### 关于 getDerivedStateFromProps
+关于 getDerivedStateFromProps
 只有当 state 的值在任何时候都取决于 props的时候才建议使用该生命周期; 否则导致多余的派生状态，这样会导致代码冗余，不好维护。
 - 如果要根据props的变更执行一些操作，应该使用componentDidUpdate
 - 如果想在props变更的时候重新计算一些数据
@@ -71,3 +71,15 @@ componentWillreceiveProps 的功能可以使用getDerivedStateFromProps 配合 c
 需要注意：
 - 不要直接复制props的值到state中，应该实现一个受控组件，然后在父组件中合并两个值
 - 对于不受控组件，如果想在props变化是重置state；1. 重置所有state，使用key属性 2. 仅更改某些字段的话，观察特殊属性的变化 3. 使用ref调用实例方法
+
+### 为什么组件的生命周期会变动
+React16版本引入了异步渲染架构Fiber，由于它主要功能是在组件渲染完成之前，可以中断渲染任务，中断之后组件剩下的生命周期不再执行，而是从头开始执行生命周期
+
+### 为什么需要异步渲染
+React16之前对于虚拟dom的渲染是同步的，将每次更改的操作收集起来，和真实dom对比出变化之后，统一一次更新dom树的结构，原来的 stack reconciler 是一个递归执行的函数，父组件调用子组件 reconciler 的过程就是一个递归的过程，如果组件的的层级比较深，dom树比较庞大，这个递归遍历的过程时间会比较长，这个时间段内，浏览器主线程被占用，其它的交互和渲染都会被阻塞，就会出现卡住的感觉
+
+### 怎么实现的异步渲染
+React16版本引入了全新的异步渲染架构Fiber，主要对 reconciler 阶段进行了拆分，以后进行详细的探究
+
+### Fiber带来的问题
+在新的Fiber架构中， 更新时分为两个阶段的 reconciliation 阶段 和 commit 阶段， reconciliation 阶段主要
