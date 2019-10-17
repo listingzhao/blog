@@ -82,4 +82,4 @@ React16之前对于虚拟dom的渲染是同步的，将每次更改的操作收�
 React16版本引入了全新的异步渲染架构Fiber，主要对 reconciler 阶段进行了拆分，以后进行详细的探究
 
 ### Fiber带来的问题
-在新的Fiber架构中， 更新时分为两个阶段的 reconciliation 阶段 和 commit 阶段， reconciliation 阶段主要
+在新的Fiber架构中， 更新时分为两个阶段的 reconciliation 阶段 和 commit 阶段， reconciliation 阶段主要计算更新前后dom树的差异，然后是commit阶段 把更新渲染到页面上；其中第一个阶段是可以打断的，如果不打断的话，dom树层级较深commit阶段的耗时会过长，并且不能打断，会造成卡死的现象；由于第一阶段会被打断，生命周期会重新执行，会导致在commit前的生命周期会执行多次的情况，造成一些意向不到的问题，所以16之前的componentWillMount，componentWillReceiveProps，componetWillUpdate 这些生命周期会被新的生命周期getDerivedStateFromProps，getSnapshotBeforeUpdate替换；并且在17版本中会删除。
