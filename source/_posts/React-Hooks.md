@@ -41,3 +41,28 @@ function App() {
 useState 需要的参数是一个初始化的值，返回值是一个数组，里面有一对值：第一个是state的值，第二个是更新state的函数
 
 ### Effect Hook 处理函数副作用 useEffect
+
+```jsx
+import React, { useState } from "react";
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = `You clicked ${count} times.`;
+  });
+
+  useEffect(() => {
+    console.log("useEffect");
+    return () => {
+      console.log("componentWillUnmount");
+    };
+  });
+  return (
+    <div className="App">
+      <p>You clicked {count} times.</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+    </div>
+  );
+}
+```
