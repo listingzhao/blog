@@ -42,6 +42,13 @@ useState 需要的参数是一个初始化的值，返回值是一个数组，�
 
 ### Effect Hook 处理函数副作用 useEffect
 
+useEffect可以看作是React生命周期componentDidMount，componentDidUpdate 和 componentWillUnmount 三个函数的组合。
+
+#### 是否需要清除
+useEffect可以返回一个函数，在这个函数中可以进行清除操作，比如取消订阅，清除计时器等；
+- 默认情况下，effect在每次渲染的时候都会执行，React会在执行当前effect之前对上一个effect进行清除
+
+Demo: [地址](https://codesandbox.io/s/demo2effecthook-6e2f6)
 ```jsx
 import React, { useState } from "react";
 
@@ -66,3 +73,21 @@ function App() {
   );
 }
 ```
+##### 注意点
+- 使用多个Effect实现关注点分离，可以按照代码的用途分离，而不是像生命周期函数那样包含了各种代码
+
+#### Effect每次渲染都会执行的原因
+主要的原因是这样的设计可以让我们在写发布订阅等类型的组件的时候少出bug，在class组件中当props改变的时候，很多时候会忘记在componentDidUpdate中处理清除更新订阅的逻辑，这是导致的常见bug，这样的设计Effect默认会处理更新逻辑，它会在调用一个新的Effect之前对上一个Effect进行清理。
+
+#### 跳过Effect的默认行为进行性能优化
+在某些情况下，每次都执行Effect可能会导致一些性能问题，解决的办法通常是添加判断逻辑来解决，useEffect的第二个可选参数接收一个数组，React会根据数组中的值对上一次的值进行比较，只有值更新了才会执行effect，如果值相等，会跳过这个effect。
+
+```jsx
+useEffect(() => {
+    document.title = `You clicked ${count} times.`;
+}, [count]);
+```
+##### 注意点
+- 数组中包含了外部作用域会随时变化并且在effect中使用的变量
+- 如果想执行只执行一次的effect，可以传递一个 [] 空数组
+
