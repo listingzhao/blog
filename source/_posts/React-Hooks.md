@@ -277,12 +277,13 @@ function App() {
 方法参数和 useEffect 一致，只是执行顺序不同，它会在所有 dom 变更之后同步调用 effect，可以使用它读取 dom 布局并更新触发重新渲染，在浏览器绘制之前，useLayoutEffect 内部的更新操作会被同步更新。
 
 注意点
-- 应该优先使用useEffect，只有出问题的时候再考虑使用useLayoutEffect，一避免阻塞浏览器渲染
+
+-   应该优先使用 useEffect，只有出问题的时候再考虑使用 useLayoutEffect，以避免阻塞浏览器渲染
 
 Demo: [地址](https://codesandbox.io/s/uselayouteffectdemo-2yl4w)
 
 ```jsx
-import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from 'react'
 function App() {
     useLayoutEffect(() => {
         console.log('useLayoutEffect')
