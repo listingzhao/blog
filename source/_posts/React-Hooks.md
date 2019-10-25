@@ -116,6 +116,8 @@ useEffect(() => {
 -   自定义 Hook 是一个函数，函数名称必须以`use`开头，函数内部可以调用其它 Hook。
 -   多个 Hook 之间可以通过参数传递信息，因为本身就是函数。
 
+## 其它 Hook
+
 ### useContext
 
 #### context API
@@ -131,6 +133,18 @@ const value = useContext(MyContext)
 useContext(MyContext) 相当于 class 组件中的 `static contextType = MyContext` 或者 `<MyContext.Consumer>` useContext 让我们能读取到 context 的值和订阅 context 的变化；需要我们在上层组件树中使用`<MyContext.Provider>`来为下层组件提供 context。
 
 Demo: [地址](https://codesandbox.io/s/usecontextdemo-bgyzr)
+
+### useReducer useState 复制情况下的替代方案
+
+-   useReducer 接收一个 `(state, action) => newState` reducer 函数，并返回当前的 state 和`dispatch` 方法；
+-   初始化 state 需要传入 useReducer 第二个参数；
+-   惰性初始化 state 需要传入 useReducer 的第三个参数，接收一个计算函数；可以把计算过程从 reducer 函数中提取出来
+
+```jsx
+const [state, dispatch] = useReducer(reducer, initialArg, init)
+```
+
+Demo: [地址](https://codesandbox.io/s/usereducerdemo-egbm8)
 
 ### useCallback 记忆函数
 
