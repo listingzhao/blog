@@ -44,9 +44,31 @@ while (true) {
   }
   node = node.sibling;
 }
+le;
 ```
 
 Demo: [地址](https://codesandbox.io/s/amazing-goldberg-wv5jf)
+
+React 中的的工作循环
+
+```javascript
+// The work loop is an extremely hot path. Tell Closure not to inline it.
+function workLoopSync() {
+  // Already timed out, so perform work without checking if we need to yield.
+  while (workInProgress !== null) {
+    workInProgress = performUnitOfWork(workInProgress);
+  }
+}
+
+function workLoopConcurrent() {
+  // Perform work until Scheduler asks us to yield
+  while (workInProgress !== null && !shouldYield()) {
+    workInProgress = performUnitOfWork(workInProgress);
+  }
+}
+```
+
+workInProgress 变量作为顶部帧，保留对当前节点的引用，这里的算法可以同步的遍历组件树，并且为树中的每个 Fiber 节点执行工作。一般是交互事件引起的 UI 变更更新。或者是异步的遍历组件树，检查在执行 Fiber 节点工作之后是否还剩下时间，shouldYield 函数返回基于 expirationTime 和 deadline 变量的结果，这些变量会在 Fiber 节点执行工作的时候更新。
 
 Fiber 的架构主要分为两个主要阶段： 协调/渲染和提交；在源码中协调阶段通常称为渲染阶段，是 React 遍历组件树的阶段
 

@@ -54,23 +54,19 @@ renderer 模块的作用主要是用来更新视图的，根据不同的环境�
 
 ```javascript
 const ReactDOM: Object = {
-    createPortal,
-    findDOMNode(
-        componentOrElement: Element | ?React$Component<any, any>
-    ): null | Element | Text {},
-    hydrate(
-        element: React$Node,
-        container: DOMContainer,
-        callback: ?Function
-    ) {},
-    render(
-        element: React$Element<any>,
-        container: DOMContainer,
-        callback: ?Function
-    ) {},
-    unmountComponentAtNode(container: DOMContainer) {},
-    flushSync: flushSync,
-}
+  createPortal,
+  findDOMNode(
+    componentOrElement: Element | ?React$Component<any, any>
+  ): null | Element | Text {},
+  hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {},
+  render(
+    element: React$Element<any>,
+    container: DOMContainer,
+    callback: ?Function
+  ) {},
+  unmountComponentAtNode(container: DOMContainer) {},
+  flushSync: flushSync
+};
 ```
 
 ### react-reconciler 核心模块
@@ -85,32 +81,58 @@ ReactBaseClasses.js
 
 ```javascript
 Component.prototype.setState = function(partialState, callback) {
-    this.updater.enqueueSetState(this, partialState, callback, 'setState')
-}
+  this.updater.enqueueSetState(this, partialState, callback, "setState");
+};
 ```
 
 ReactFiberClassComponent.js
+
 ```javascript
 const classComponentUpdater = {
-    isMounted,
-    enqueueSetState(inst, payload, callback) {
-        const fiber = getInstance(inst)
-        const currentTime = requestCurrentTime()
-        const suspenseConfig = requestCurrentSuspenseConfig()
-        const expirationTime = computeExpirationForFiber(
-            currentTime,
-            fiber,
-            suspenseConfig
-        )
+  isMounted,
+  enqueueSetState(inst, payload, callback) {
+    const fiber = getInstance(inst);
+    const currentTime = requestCurrentTimeForUpdate();
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig
+    );
 
-        const update = createUpdate(expirationTime, suspenseConfig)
-        update.payload = payload
-        if (callback !== undefined && callback !== null) {
-            update.callback = callback
-        }
+    const update = createUpdate(expirationTime, suspenseConfig);
+    update.payload = payload;
+    if (callback !== undefined && callback !== null) {
+      update.callback = callback;
+    }
 
-        enqueueUpdate(fiber, update)
-        scheduleWork(fiber, expirationTime)
-    },
+    enqueueUpdate(fiber, update);
+    scheduleWork(fiber, expirationTime);
+  }
+};
+```
+
+ReactUpdateQueue.js
+
+```javascript
+export const UpdateState = 0; // 更新
+export const ReplaceState = 1; // 替换
+export const ForceUpdate = 2; // 强制更新
+export const CaptureUpdate = 3; // 捕获性的更新
+
+export function createUpdate(expirationTime, suspenseConfig) {
+  let update = {
+    expirationTime,
+    suspenseConfig,
+
+    tag: UpdateState,
+    payload: null,
+    callback: null,
+    // 指向下一个更新
+    next: null,
+    // 指向下一个副作用
+    nextEffect: null
+  };
+  return update;
 }
 ```
