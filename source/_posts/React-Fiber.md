@@ -51,6 +51,8 @@ Demo: [地址](https://codesandbox.io/s/amazing-goldberg-wv5jf)
 
 React 中的的工作循环
 
+ReactFiberWorkLoop.js
+
 ```javascript
 // The work loop is an extremely hot path. Tell Closure not to inline it.
 function workLoopSync() {
@@ -115,6 +117,45 @@ export const ScopeComponent = 21;
 
 #### 调度器的实现
 
+使用间隔较短的 postMessage 循环，而不是尝试使用 requestAnimationFrame 对齐框架边界。
+
+```javascript
+const channel = new MessageChannel();
+const port = channel.port2;
+channel.port1.onmessage = performWorkUntilDeadline;
+const performWorkUntilDeadline = () => {
+  if (scheduledHostCallback !== null) {
+    const currentTime = getCurrentTime();
+    // Yield after `yieldInterval` ms, regardless of where we are in the vsync
+    // cycle. This means there's always time remaining at the beginning of
+    // the message event.
+    deadline = currentTime + yieldInterval;
+    const hasTimeRemaining = true;
+    try {
+      const hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
+      if (!hasMoreWork) {
+        isMessageLoopRunning = false;
+        scheduledHostCallback = null;
+      } else {
+        // If there's more work, schedule the next message event at the end
+        // of the preceding one.
+        port.postMessage(null);
+      }
+    } catch (error) {
+      // If a scheduler task throws, exit the current browser task so the
+      // error can be observed.
+      port.postMessage(null);
+      throw error;
+    }
+  } else {
+    isMessageLoopRunning = false;
+  }
+  // Yielding to the browser will give it a chance to paint, so we can
+  // reset this.
+  needsPaint = false;
+};
+```
+
 React 会根据任务的优先级去分配各自的 `expirationTime` , 在过期时间到之前先去处理高优先级的任务，并且高优先级的任务可以打断低优先级的任务，所以会导致一些生命周期函数多次执行的问题。
 
 优先级类型
@@ -128,4 +169,69 @@ export const LowPriority = 4; // 低优先级 10ms 过期 可以推迟但是最�
 export const IdlePriority = 5; // 空闲优先级 永不过期
 ```
 
-#### 调度算法
+#### 调度的流程
+
+Scheduler.js 调度器的入口
+
+```javascript
+function unstable_scheduleCallback(priorityLevel, callback, options) {
+  var currentTime = getCurrentTime();
+
+  var startTime;
+  var timeout;
+  if (typeof options === "object" && options !== null) {
+    var delay = options.delay;
+    if (typeof delay === "number" && delay > 0) {
+      startTime = currentTime + delay;
+    } else {
+      startTime = currentTime;
+    }
+    timeout =
+      typeof options.timeout === "number"
+        ? options.timeout
+        : timeoutForPriorityLevel(priorityLevel);
+  } else {
+    timeout = timeoutForPriorityLevel(priorityLevel);
+    startTime = currentTime;
+  }
+
+  var expirationTime = startTime + timeout;
+
+  var newTask = {
+    id: taskIdCounter++,
+    callback,
+    priorityLevel,
+    startTime,
+    expirationTime,
+    sortIndex: -1
+  };
+
+  if (startTime > currentTime) {
+    // This is a delayed task.
+    newTask.sortIndex = startTime;
+    push(timerQueue, newTask);
+    if (peek(taskQueue) === null && newTask === peek(timerQueue)) {
+      // All tasks are delayed, and this is the task with the earliest delay.
+      if (isHostTimeoutScheduled) {
+        // Cancel an existing timeout.
+        cancelHostTimeout();
+      } else {
+        isHostTimeoutScheduled = true;
+      }
+      // Schedule a timeout.
+      requestHostTimeout(handleTimeout, startTime - currentTime);
+    }
+  } else {
+    newTask.sortIndex = expirationTime;
+    push(taskQueue, newTask);
+    // Schedule a host callback, if needed. If we're already performing work,
+    // wait until the next time we yield.
+    if (!isHostCallbackScheduled && !isPerformingWork) {
+      isHostCallbackScheduled = true;
+      requestHostCallback(flushWork);
+    }
+  }
+
+  return newTask;
+}
+```
