@@ -1,5 +1,5 @@
 ---
-title: React 虚拟Dom
+title: React 虚拟DOM
 date: 2019-12-19 11:10:02
 tags:
 ---
@@ -189,5 +189,131 @@ export function isValidElement(object) {
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+```
+
+#### 虚拟 DOM 转换为真实 DOM
+
+组件声明完成，我们需要调用`ReactDOM.render(element, container[, callback])` 渲染组件。在 React16+的版本中，引入了 Fiber 架构，在这一步中会将虚拟 Dom 转为 Fiber 结构类型。
+
+```javascript
+// ReactDOMLegacy.js
+export function render(element, container, callback) {
+  return legacyRenderSubtreeIntoContainer(
+    null,
+    element,
+    container,
+    false,
+    callback
+  );
+}
+
+function legacyCreateRootFromDOMContainer(
+  container: DOMContainer,
+  forceHydrate: boolean
+): RootType {
+  const shouldHydrate =
+    forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
+  // 首先清除所有现有的内容
+  if (!shouldHydrate) {
+    let warned = false;
+    let rootSibling;
+    while ((rootSibling = container.lastChild)) {
+      container.removeChild(rootSibling);
+    }
+  }
+
+  return createLegacyRoot(
+    container,
+    shouldHydrate
+      ? {
+          hydrate: true
+        }
+      : undefined
+  );
+}
+
+function legacyRenderSubtreeIntoContainer(
+  parentComponent,
+  children,
+  container,
+  forceHydrate,
+  callback
+) {
+  let root: RootType = (container._reactRootContainer: any);
+  let fiberRoot;
+  if (!root) {
+    // 初始化
+    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
+      container,
+      forceHydrate
+    );
+    fiberRoot = root._internalRoot;
+    if (typeof callback === "function") {
+      const originalCallback = callback;
+      callback = function() {
+        const instance = getPublicRootInstance(fiberRoot);
+        originalCallback.call(instance);
+      };
+    }
+    // 初始化渲染不应该分批进行
+    unbatchedUpdates(() => {
+      updateContainer(children, fiberRoot, parentComponent, callback);
+    });
+  } else {
+    fiberRoot = root._internalRoot;
+    if (typeof callback === "function") {
+      const originalCallback = callback;
+      callback = function() {
+        const instance = getPublicRootInstance(fiberRoot);
+        originalCallback.call(instance);
+      };
+    }
+    // 更新
+    updateContainer(children, fiberRoot, parentComponent, callback);
+  }
+  return getPublicRootInstance(fiberRoot);
+}
+```
+
+```javascript
+// ReactFiberReconciler.js
+export function updateContainer(element, container, parentComponent, callback) {
+  // 当前fiber
+  const current = container.current;
+  // 获取当前更新开始时间
+  const currentTime = requestCurrentTimeForUpdate();
+  // 获取配置
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  // 计算过期时间
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    current,
+    suspenseConfig
+  );
+
+  // 获取上下文
+  const context = getContextForSubtree(parentComponent);
+  if (container.context === null) {
+    container.context = context;
+  } else {
+    container.pendingContext = context;
+  }
+
+  // 创建更新任务
+  const update = createUpdate(expirationTime, suspenseConfig);
+  update.payload = { element };
+
+  callback = callback === undefined ? null : callback;
+  if (callback !== null) {
+    update.callback = callback;
+  }
+
+  // 关联更新
+  enqueueUpdate(current, update);
+  // 调度
+  scheduleWork(current, expirationTime);
+
+  return expirationTime;
 }
 ```

@@ -154,55 +154,30 @@ export function createUpdate(expirationTime, suspenseConfig) {
     payload: null,
     callback: null,
     // 指向下一个更新
-    next: null,
-    // 指向下一个副作用
-    nextEffect: null
+    next: null
   };
+
+  update.next = update;
   return update;
 }
 
-export function createUpdateQueue(baseState) {
-  const queue = {
-    baseState,
-    firstUpdate: null,
-    lastUpdate: null,
-    firstCapturedUpdate: null,
-    lastCapturedUpdate: null,
-    firstEffect: null,
-    lastEffect: null,
-    firstCapturedEffect: null,
-    lastCapturedEffect: null
-  };
-  return queue;
-}
-
 export function enqueueUpdate(fiber, update) {
-  const alternate = fiber.alternate;
-  let queue1;
-  let queue2;
-  if (alternate === null) {
-    // There's only one fiber.
-    queue1 = fiber.updateQueue;
-    queue2 = null;
-    if (queue1 === null) {
-      queue1 = fiber.updateQueue = createUpdateQueue(fiber.memoizedState);
-    }
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    // Only occurs if the fiber has been unmounted.
+    return;
   }
-  if (queue2 === null || queue1 === queue2) {
-    // There's only a single queue.
-    appendUpdateToQueue(queue1, update);
-  }
-}
 
-function appendUpdateToQueue(queue, update) {
-  // Append the update to the end of the list.
-  if (queue.lastUpdate === null) {
-    // Queue is empty
-    queue.firstUpdate = queue.lastUpdate = update;
+  const sharedQueue = updateQueue.shared;
+  const pending = sharedQueue.pending;
+  if (pending === null) {
+    // 首次更新创建一个循环链表
+    update.next = update;
   } else {
-    queue.lastUpdate.next = update;
-    queue.lastUpdate = update;
+    update.next = pending.next;
+    pending.next = update;
   }
+  sharedQueue.pending = update;
 }
 ```
 
@@ -230,19 +205,61 @@ export function scheduleUpdateOnFiber(fiber, expirationTime) {
 }
 
 function performSyncWorkOnRoot(root) {
-  // Check if there's expired work on this root. Otherwise, render at Sync.
-  const lastExpiredTime = root.lastExpiredTime;
-  const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
-  if (root.finishedExpirationTime === expirationTime) {
-    // There's already a pending commit at this expiration time.
-    // TODO: This is poorly factored. This case only exists for the
-    // batch.commit() API.
-    commitRoot(root);
-  } else {
+  // If we have a work-in-progress fiber, it means there's still work to do
+  // in this root.
+  if (workInProgress !== null) {
+    const prevExecutionContext = executionContext;
+    executionContext |= RenderContext;
+    const prevDispatcher = pushDispatcher(root);
+    const prevInteractions = pushInteractions(root);
+    startWorkLoopTimer(workInProgress);
+
+    do {
+      try {
+        // fiber 工作循环
+        workLoopSync();
+        break;
+      } catch (thrownValue) {
+        handleError(root, thrownValue);
+      }
+    } while (true);
+    resetContextDependencies();
+    executionContext = prevExecutionContext;
+    popDispatcher(prevDispatcher);
+    if (enableSchedulerTracing) {
+      popInteractions(((prevInteractions: any): Set<Interaction>));
+    }
+
+    if (workInProgressRootExitStatus === RootFatalErrored) {
+      const fatalError = workInProgressRootFatalError;
+      stopInterruptedWorkLoopTimer();
+      prepareFreshStack(root, expirationTime);
+      markRootSuspendedAtTime(root, expirationTime);
+      ensureRootIsScheduled(root);
+      throw fatalError;
+    }
+
+    if (workInProgress !== null) {
+      // This is a sync render, so we should have finished the whole tree.
+      invariant(
+        false,
+        "Cannot commit an incomplete root. This error is likely caused by a " +
+          "bug in React. Please file an issue."
+      );
+    } else {
+      // We now have a consistent tree. Because this is a sync render, we
+      // will commit it even if something suspended.
+      stopFinishedWorkLoopTimer();
+      root.finishedWork = (root.current.alternate: any);
+      root.finishedExpirationTime = expirationTime;
+      finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
+    }
+
     // Before exiting, make sure there's a callback scheduled for the next
     // pending level.
     ensureRootIsScheduled(root);
   }
+  return null;
 }
 
 function ensureRootIsScheduled(root) {
