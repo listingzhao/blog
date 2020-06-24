@@ -4,6 +4,21 @@ date: 2018-04-02 23:37:28
 tags:
 ---
 
+#### 面试题
+
+1. vue是如何实现双向数据绑定的？
+在vue中主要采用的数数据劫持的模式，使用的是ES5的Object.defineProperty方法来劫持实例上属性的getter，setter；设置通知的机制，当编译生成的渲染函数被实际渲染时候，会触发getter 进行依赖收集，在数据变化的时候触发setter进行更新。
+
+2. vue的工作机制是怎么样的？
+new一个Vue的实例中，调用初始化方法；首先是初始化生命周期，事件，data，props，methods，computed，和watch等。其中最重要的是初始化data时，使用Object.defineProperty 劫持 data属性的getter与setter，用来实现响应式以及依赖收集。
+
+3. vue中的complie
+
+4. react的虚拟dom是什么？如何实现？说一下diff算法？
+虚拟dom是react中的dom对象；更新时候可以对比虚拟dom差异，来进行dom更新的；是用Jsx编写生成的虚拟domjs对象，经过babel编译之后生成真正的dom元素，然后会将真正的dom元素渲染到页面中。由于操作dom成本高，有瓶颈，所以在更新dom的时候会先修改虚拟dom，通过diff算法找到需要更新的dom，然后patch方法进行更新，diff算法遍历dom数，同层级的节点进行对比，只需遍历一次就能查找到不同的节点，
+
+5. DIFF算法为什么是O(n)复杂度而不是O(n^3)？
+
 ```javascript
 const v = new Vue({
   data: {

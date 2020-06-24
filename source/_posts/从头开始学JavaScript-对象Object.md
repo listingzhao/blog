@@ -66,6 +66,9 @@ function SuperType(name) {
 SuperType.prototype.sayName = function() {
   alert(this.name)
 }
+SuperType.prototype.push = function(color) {
+  this.colors.push(color)
+}
 function SubType(age, name) {
   SuperType.call(this, name)
   this.age = age
